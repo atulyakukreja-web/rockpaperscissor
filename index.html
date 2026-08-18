@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rock Paper Scissors — Arena</title>
+<style>
+  :root {
+    --bg: #14151c;
+    --bg-panel: #1c1e29;
+    --line: #2c2f3e;
+    --ink: #eef0f6;
+    --ink-dim: #8b8fa3;
+    --accent: #f2b84b;
+    --accent-dim: #6b5626;
+    --win: #5ed6a8;
+    --lose: #f2637a;
+    --draw: #8b8fa3;
+    --font-display: 'Rockwell', 'Arial Black', system-ui, sans-serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: radial-gradient(ellipse at 50% -10%, #22243250 0%, var(--bg) 60%);
+    color: var(--ink);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .arena {
+    width: 100%;
+    max-width: 620px;
+  }
+
+  .eyebrow {
+    text-align: center;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    font-size: 11px;
+    color: var(--accent);
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+
+  h1 {
+    text-align: center;
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: clamp(28px, 6vw, 42px);
+    letter-spacing: 0.01em;
+    margin: 0 0 28px;
+    color: var(--ink);
+  }
+
+  .scoreboard {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px 22px;
+    margin-bottom: 26px;
+  }
+
+  .score-side { text-align: center; }
+  .score-side.player { text-align: left; }
+  .score-side.computer { text-align: right; }
+
+  .score-label {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    margin-bottom: 4px;
+  }
+
+  .score-num {
+    font-family: var(--font-display);
+    font-size: 34px;
+    font-weight: 900;
+  }
+
+  .score-num.player-num { color: var(--win); }
+  .score-num.computer-num { color: var(--lose); }
+
+  .vs-divider {
+    font-family: var(--font-display);
+    font-size: 13px;
+    color: var(--ink-dim);
+    padding: 0 14px;
+    letter-spacing: 0.08em;
+  }
+
+  .stage {
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 34px 24px;
+    text-align: center;
+    margin-bottom: 22px;
+    min-height: 210px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .clash-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    margin-bottom: 18px;
+  }
+
+  .hand-slot {
+    width: 92px;
+    height: 92px;
+    border-radius: 50%;
+    background: #14151c;
+    border: 2px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 44px;
+    transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+  }
+
+  .hand-slot.reveal-player {
+    border-color: var(--win);
+    animation: punchLeft 0.4s ease;
+  }
+  .hand-slot.reveal-computer {
+    border-color: var(--lose);
+    animation: punchRight 0.4s ease;
+  }
+  .hand-slot.tie-glow { border-color: var(--draw); }
+
+  @keyframes punchLeft {
+    0% { transform: translateX(-14px) scale(0.85); opacity: 0.3; }
+    100% { transform: translateX(0) scale(1); opacity: 1; }
+  }
+  @keyframes punchRight {
+    0% { transform: translateX(14px) scale(0.85); opacity: 0.3; }
+    100% { transform: translateX(0) scale(1); opacity: 1; }
+  }
+
+  .bolt {
+    font-size: 22px;
+    color: var(--accent);
+  }
+
+  .result-text {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 22px;
+    min-height: 30px;
+    letter-spacing: 0.01em;
+  }
+
+  .result-text.win { color: var(--win); }
+  .result-text.lose { color: var(--lose); }
+  .result-text.draw { color: var(--draw); }
+
+  .sub-text {
+    font-size: 13px;
+    color: var(--ink-dim);
+    margin-top: 4px;
+    min-height: 16px;
+  }
+
+  .choices {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .choice-btn {
+    width: 96px;
+    height: 96px;
+    border-radius: 16px;
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-size: 38px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 6px;
+    transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  }
+  
+  .choice-btn img { width: 44px; height: 44px; object-fit: contain; } 
+
+  .choice-btn .label {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+
+  .choice-btn:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent);
+    background: #23253166;
+  }
+
+  .choice-btn:active { transform: translateY(-1px); }
+
+  .choice-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .footer-row {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
+
+  .reset-btn {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--ink-dim);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 9px 18px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+
+  .reset-btn:hover {
+    border-color: var(--lose);
+    color: var(--lose);
+  }
+
+  .streak {
+    text-align: center;
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    margin-top: 10px;
+    min-height: 16px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hand-slot.reveal-player, .hand-slot.reveal-computer { animation: none; }
+  }
+</style>
+</head>
+<body>
+<div class="arena">
+  <div class="eyebrow">Best hand wins</div>
+  <h1>Rock · Paper · Scissors</h1>
+
+  <div class="scoreboard">
+    <div class="score-side player">
+      <div class="score-label">You</div>
+      <div class="score-num player-num" id="playerScore">0</div>
+    </div>
+    <div class="vs-divider">VS</div>
+    <div class="score-side computer">
+      <div class="score-label">Computer</div>
+      <div class="score-num computer-num" id="computerScore">0</div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="clash-row">
+      <div class="hand-slot" id="playerHand">?</div>
+      <div class="bolt">⚡</div>
+      <div class="hand-slot" id="computerHand">?</div>
+    </div>
+    <div class="result-text" id="resultText">Make your move</div>
+    <div class="sub-text" id="subText">Pick rock, paper, or scissors to begin</div>
+  </div>
+
+  <div class="choices">
+    <button class="choice-btn" data-choice="rock" aria-label="Play Rock">
+      <span><img src="img1.png" alt=""></span>
+      <span class="label">Rock</span>
+    </button>
+    <button class="choice-btn" data-choice="paper" aria-label="Play Paper">
+      <span><img src="img2.png" alt=""></span>
+      <span class="label">Paper</span>
+    </button>
+    <button class="choice-btn" data-choice="scissors" aria-label="Play Scissors">
+      <span><img src="img3.png" alt=""></span>
+      <span class="label">Scissors</span>
+    </button>
+  </div>
+
+  <div class="streak" id="streakText"></div>
+
+  <div class="footer-row">
+    <button class="reset-btn" id="resetBtn">Reset match</button>
+  </div>
+</div>
+
+<script>
+  const ICONS = { rock: '', paper: '📄', scissors: '✂️' };
+  const BEATS = { rock: 'scissors', paper: 'rock', scissors: 'paper' };
+
+  let playerScore = 0;
+  let computerScore = 0;
+  let streak = 0;
+  let lastWinner = null;
+
+  const playerScoreEl = document.getElementById('playerScore');
+  const computerScoreEl = document.getElementById('computerScore');
+  const playerHandEl = document.getElementById('playerHand');
+  const computerHandEl = document.getElementById('computerHand');
+  const resultTextEl = document.getElementById('resultText');
+  const subTextEl = document.getElementById('subText');
+  const streakTextEl = document.getElementById('streakText');
+  const buttons = document.querySelectorAll('.choice-btn');
+  const resetBtn = document.getElementById('resetBtn');
+
+  function computerPick() {
+    const options = ['rock', 'paper', 'scissors'];
+    return options[Math.floor(Math.random() * 3)];
+  }
+
+  function decide(player, computer) {
+    if (player === computer) return 'draw';
+    return BEATS[player] === computer ? 'win' : 'lose';
+  }
+
+  function play(choice) {
+    const compChoice = computerPick();
+    const outcome = decide(choice, compChoice);
+
+    playerHandEl.classList.remove('reveal-player', 'tie-glow');
+    computerHandEl.classList.remove('reveal-computer', 'tie-glow');
+    void playerHandEl.offsetWidth;
+
+    playerHandEl.textContent = ICONS[choice];
+    computerHandEl.textContent = ICONS[compChoice];
+
+    if (outcome === 'draw') {
+      playerHandEl.classList.add('tie-glow');
+      computerHandEl.classList.add('tie-glow');
+    } else {
+      playerHandEl.classList.add('reveal-player');
+      computerHandEl.classList.add('reveal-computer');
+    }
+
+    resultTextEl.classList.remove('win', 'lose', 'draw');
+
+    if (outcome === 'win') {
+      playerScore++;
+      streak = lastWinner === 'player' ? streak + 1 : 1;
+      lastWinner = 'player';
+      resultTextEl.textContent = 'You win!';
+      resultTextEl.classList.add('win');
+      subTextEl.textContent = `${ICONS[choice]} beats ${ICONS[compChoice]}`;
+    } else if (outcome === 'lose') {
+      computerScore++;
+      streak = lastWinner === 'computer' ? streak + 1 : 1;
+      lastWinner = 'computer';
+      resultTextEl.textContent = 'Computer wins!';
+      resultTextEl.classList.add('lose');
+      subTextEl.textContent = `${ICONS[compChoice]} beats ${ICONS[choice]}`;
+    } else {
+      streak = 0;
+      lastWinner = null;
+      resultTextEl.textContent = "It's a draw!";
+      resultTextEl.classList.add('draw');
+      subTextEl.textContent = `Both chose ${ICONS[choice]}`;
+    }
+
+    playerScoreEl.textContent = playerScore;
+    computerScoreEl.textContent = computerScore;
+
+    if (streak > 1) {
+      streakTextEl.textContent = `🔥 ${streak} win streak!`;
+    } else if (streak === 1) {
+      streakTextEl.textContent = '1 win';
+    } else {
+      streakTextEl.textContent = '';
+    }
+  }
+
+  function resetMatch() {
+    playerScore = 0;
+    computerScore = 0;
+    streak = 0;
+    lastWinner = null;
+    playerScoreEl.textContent = '0';
+    computerScoreEl.textContent = '0';
+    playerHandEl.textContent = '?';
+    computerHandEl.textContent = '?';
+    resultTextEl.textContent = 'Make your move';
+    subTextEl.textContent = 'Pick rock, paper, or scissors to begin';
+    resultTextEl.classList.remove('win', 'lose', 'draw');
+    streakTextEl.textContent = '';
+    playerHandEl.classList.remove('reveal-player', 'tie-glow');
+    computerHandEl.classList.remove('reveal-computer', 'tie-glow');
+  }
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const choice = btn.getAttribute('data-choice');
+      play(choice);
+    });
+  });
+
+  resetBtn.addEventListener('click', resetMatch);
+</script>
+</body>
+</html>
